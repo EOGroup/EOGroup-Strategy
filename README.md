@@ -158,31 +158,31 @@ document.getElementById("registrationForm").addEventListener("submit", async fun
         // Convert Data to JSON String
         const updatedJSON = JSON.stringify(existingData, null, 2);
 
-        // Push Updated JSON File to GitHub
-        const githubToken = "EO_GROUP_TOKEN";
+        // GitHub API URL
         const repo = "EOGGroup/EOGroup-Strategy";
         const filePath = "data.json";
-        
+
         // Get SHA (GitHub File Versioning)
         const shaResponse = await fetch(`https://api.github.com/repos/${repo}/contents/${filePath}`);
         const shaData = await shaResponse.json();
         const fileSHA = shaData.sha;
 
-        // Update JSON File on GitHub
+        // Push Updated JSON File to GitHub
         await fetch(`https://api.github.com/repos/${repo}/contents/${filePath}`, {
             method: "PUT",
             headers: {
-                "Authorization": `token ${githubToken}`,
+                "Authorization": `token ${process.env.EO_GROUP_TOKEN}`,  // Use GitHub Secret
                 "Accept": "application/vnd.github.v3+json"
             },
             body: JSON.stringify({
                 message: "Updated User Data",
-                content: btoa(updatedJSON), // Convert to Base64
+                content: btoa(unescape(encodeURIComponent(updatedJSON))), // Convert to Base64
                 sha: fileSHA
             })
         });
 
-        alert("Registration Successful! Data Stored.");
+        alert("✅ Registration Successful! Data Stored.");
     };
 });
 </script>
+
