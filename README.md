@@ -127,3 +127,62 @@
     </script>
 </body>
 </html>
+
+<script>
+document.getElementById("registrationForm").addEventListener("submit", async function(event) {
+    event.preventDefault();
+
+    // User Input Data
+    const name = document.getElementById("name").value;
+    const email = document.getElementById("email").value;
+    const phone = document.getElementById("phone").value;
+    const transactionId = document.getElementById("transactionId").value;
+    const paidAmount = document.getElementById("paidAmount").value;
+    
+    const paymentProof = document.getElementById("paymentProof").files[0];
+
+    // Convert Image to Base64
+    const reader = new FileReader();
+    reader.readAsDataURL(paymentProof);
+    reader.onload = async function () {
+        const imageData = reader.result;
+
+        // Fetch Existing JSON Data
+        const response = await fetch('https://raw.githubusercontent.com/EOGGroup/EOGroup-Strategy/main/data.json');
+        let existingData = await response.json();
+
+        // Add New Data
+        const newData = { name, email, phone, transactionId, paidAmount, imageData };
+        existingData.push(newData);
+
+        // Convert Data to JSON String
+        const updatedJSON = JSON.stringify(existingData, null, 2);
+
+        // Push Updated JSON File to GitHub
+        const githubToken = "EO_GROUP_TOKEN";
+        const repo = "EOGGroup/EOGroup-Strategy";
+        const filePath = "data.json";
+        
+        // Get SHA (GitHub File Versioning)
+        const shaResponse = await fetch(`https://api.github.com/repos/${repo}/contents/${filePath}`);
+        const shaData = await shaResponse.json();
+        const fileSHA = shaData.sha;
+
+        // Update JSON File on GitHub
+        await fetch(`https://api.github.com/repos/${repo}/contents/${filePath}`, {
+            method: "PUT",
+            headers: {
+                "Authorization": `token ${githubToken}`,
+                "Accept": "application/vnd.github.v3+json"
+            },
+            body: JSON.stringify({
+                message: "Updated User Data",
+                content: btoa(updatedJSON), // Convert to Base64
+                sha: fileSHA
+            })
+        });
+
+        alert("Registration Successful! Data Stored.");
+    };
+});
+</script>
